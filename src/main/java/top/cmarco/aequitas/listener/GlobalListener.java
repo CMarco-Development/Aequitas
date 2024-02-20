@@ -1,7 +1,6 @@
 package top.cmarco.aequitas.listener;
 
 import io.netty.channel.ChannelPipeline;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -10,7 +9,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
 import top.cmarco.aequitas.Aequitas;
+import top.cmarco.aequitas.chat.MessageUtils;
 import top.cmarco.aequitas.data.PlayerData;
 import top.cmarco.aequitas.exceptions.PipelineInjectException;
 import top.cmarco.aequitas.network.AequitasChannel;
@@ -19,13 +20,16 @@ import top.cmarco.aequitas.utils.NetworkUtils;
 /**
  * GlobalListener class that listens to player events.
  */
-@RequiredArgsConstructor
 public final class GlobalListener implements Listener {
 
     private static final String DEFAULT_CHANNEL = "packet_handler";
     private static final String AEQUITAS_CHANNEL = "aegis_packet_handler";
 
     private final Aequitas aequitas;
+
+    public GlobalListener(@NotNull final Aequitas aequitas) {
+        this.aequitas = aequitas;
+    }
 
     /**
      * Handles player interact events.
@@ -54,11 +58,15 @@ public final class GlobalListener implements Listener {
             final AequitasChannel playerAequitasChannel = new AequitasChannel(playerData, aequitas);
             final ChannelPipeline playerPipeline = NetworkUtils.getPlayerPipeline(player);
 
-            if (playerPipeline != null) {
+            if (playerPipeline == null) {
                 return;
             }
 
-            playerPipeline.addBefore(DEFAULT_CHANNEL, AEQUITAS_CHANNEL, playerAequitasChannel);
+            aequitas.getExecutorPacket().execute(() -> {
+                playerPipeline.addBefore(DEFAULT_CHANNEL, AEQUITAS_CHANNEL, playerAequitasChannel);
+            });
+
+            MessageUtils.sendWithLogo(aequitas.getServer().getConsoleSender(), "&aAdded &e" + player.getName() + " &ato checklist.");
         } catch (PipelineInjectException exception) {
             // Handling the inner exception called from networking utils (could not get pipeline).
             this.aequitas.getLogger().warning(exception.getLocalizedMessage());
@@ -79,7 +87,7 @@ public final class GlobalListener implements Listener {
 
             // double-checking the pipeline has been successfully removed.
             if (playerPipeline != null && playerPipeline.get(AEQUITAS_CHANNEL) != null) {
-                playerPipeline.remove(AEQUITAS_CHANNEL);
+                aequitas.getExecutorPacket().execute(() -> playerPipeline.remove(AEQUITAS_CHANNEL));
             }
 
         } catch (PipelineInjectException exception) {

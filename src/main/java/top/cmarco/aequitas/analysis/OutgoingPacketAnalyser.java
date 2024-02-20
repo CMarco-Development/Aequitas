@@ -5,6 +5,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
 import org.jetbrains.annotations.NotNull;
+import top.cmarco.aequitas.Aequitas;
 import top.cmarco.aequitas.data.PlayerData;
 
 /**
@@ -23,19 +24,22 @@ public final class OutgoingPacketAnalyser implements PlayerPacketAnalyser<Client
      */
     @Override
     public void process(final @NotNull Packet<? extends ClientboundPacketListener> packet, @NotNull final PlayerData playerData) {
+        final Aequitas aequitas = playerData.getAequitas();
 
-        if (packet instanceof ClientboundPlayerPositionPacket outPosPacket) {
-            final boolean matchId = outPosPacket.getId() == playerData.getPlayer().getEntityId();
+        aequitas.runTaskSync(() -> {
+            if (packet instanceof ClientboundPlayerPositionPacket outPosPacket) {
+                final boolean matchId = outPosPacket.getId() == playerData.getPlayer().getEntityId();
 
-            if (!matchId) {
-                return;
+                if (!matchId) {
+                    return;
+                }
+
+                playerData.getVelocityData().addVelocityEntry(outPosPacket.getX(), outPosPacket.getY(), outPosPacket.getZ());
+            } else if (packet instanceof ClientboundTeleportEntityPacket outTeleportPacket) {
+
+            } else {
+
             }
-
-            playerData.getVelocityData().addVelocityEntry(outPosPacket.getX(), outPosPacket.getY(), outPosPacket.getZ());
-        } else if (packet instanceof ClientboundTeleportEntityPacket outTeleportPacket) {
-
-        } else {
-
-        }
+        });
     }
 }

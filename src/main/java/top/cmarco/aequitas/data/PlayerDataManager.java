@@ -3,6 +3,7 @@ package top.cmarco.aequitas.data;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import top.cmarco.aequitas.Aequitas;
 
 import java.util.Collection;
 import java.util.Map;
@@ -14,11 +15,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PlayerDataManager {
 
+    private final Aequitas aequitas;
+
     /**
      * Map to store player data with UUID as the key.
      */
     @NotNull
     private final Map<UUID, PlayerData> playerDataMap = new ConcurrentHashMap<>();
+
+    public PlayerDataManager(@NotNull final Aequitas aequitas) {
+        this.aequitas = aequitas;
+    }
 
     /**
      * Retrieves player data for the given player. Creates a new entry if not present.
@@ -28,7 +35,7 @@ public final class PlayerDataManager {
      */
     @NotNull
     public PlayerData getData(@NotNull final Player player) {
-        return this.playerDataMap.computeIfAbsent(player.getUniqueId(), uuid -> new PlayerData(player));
+        return this.playerDataMap.computeIfAbsent(player.getUniqueId(), uuid -> new PlayerData(player, this.aequitas));
     }
 
     /**

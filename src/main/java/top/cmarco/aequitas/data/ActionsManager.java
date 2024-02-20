@@ -1,14 +1,9 @@
 package top.cmarco.aequitas.data;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-
 /**
  * The ActionsManager class represents a manager for various player actions.
  * It tracks different actions such as placing, attacking, teleporting, and digging.
  */
-@Data
-@RequiredArgsConstructor
 public final class ActionsManager {
 
     /**
@@ -35,4 +30,28 @@ public final class ActionsManager {
      * Indicates whether the player is currently digging blocks.
      */
     private final boolean digging = false;
+
+    public ActionsManager(PlayerData playerData) {
+        this.playerData = playerData;
+    }
+
+    public PlayerData getPlayerData() {
+        return playerData;
+    }
+
+    public boolean isPlacing() {
+        return placing;
+    }
+
+    public boolean isAttacking() {
+        return attacking;
+    }
+
+    public boolean isTeleported() {
+        return teleported;
+    }
+
+    public boolean isDigging() {
+        return digging;
+    }
 }

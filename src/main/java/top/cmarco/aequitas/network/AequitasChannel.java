@@ -3,18 +3,23 @@ package top.cmarco.aequitas.network;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import lombok.RequiredArgsConstructor;
 import net.minecraft.network.ClientboundPacketListener;
 import net.minecraft.network.ServerboundPacketListener;
 import net.minecraft.network.protocol.Packet;
+import org.jetbrains.annotations.NotNull;
 import top.cmarco.aequitas.Aequitas;
 import top.cmarco.aequitas.data.PlayerData;
 
-@RequiredArgsConstructor
+
 public final class AequitasChannel extends ChannelDuplexHandler {
 
     private final PlayerData playerData;
     private final Aequitas aequitas;
+
+    public AequitasChannel(@NotNull final PlayerData playerData, @NotNull final Aequitas aequitas) {
+        this.playerData = playerData;
+        this.aequitas = aequitas;
+    }
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {

@@ -1,6 +1,5 @@
 package top.cmarco.aequitas.analysis;
 
-import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import org.jetbrains.annotations.NotNull;
 import top.cmarco.aequitas.data.PlayerData;

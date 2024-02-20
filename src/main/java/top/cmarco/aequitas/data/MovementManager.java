@@ -1,23 +1,17 @@
 package top.cmarco.aequitas.data;
 
-import com.google.common.collect.ImmutableList;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.material.MaterialData;
-import org.bukkit.material.Stairs;
-import org.bukkit.material.Step;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import top.cmarco.aequitas.checks.Check;
 import top.cmarco.aequitas.checks.types.MovementCheck;
 import top.cmarco.aequitas.data.containers.MovementContainer;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -27,8 +21,6 @@ import java.util.function.Predicate;
  * The MovementManager class is responsible for managing and tracking player movement.
  * It maintains the last known positions of the player in the world.
  */
-@RequiredArgsConstructor
-@Getter
 public final class MovementManager {
 
     /**
@@ -66,7 +58,12 @@ public final class MovementManager {
     private boolean touchingClimbable = false;
     private boolean touchingHalfBlock = false;
     private boolean touchingIllegalBlock = false;
-    private LivingEntity[] nearbyEntities;
+    private Entity[] nearbyEntities;
+    private BoundingBox lastBoundingBox = null;
+
+    public MovementManager(PlayerData playerData) {
+        this.playerData = playerData;
+    }
 
     /**
      * Updates the last known player position and handles other relevant information.
@@ -77,28 +74,37 @@ public final class MovementManager {
      * @param posZ      The Z-coordinate of the player's current position.
      * @param onGround  A boolean indicating whether the player is currently on the ground.
      */
-    public void handle(final World world,
-                       final boolean hasPos,
-                       final double posX, final double posY, final double posZ,
-                       final boolean hasRot,
-                       final double rotX, final double rotY,
-                       final boolean onGround) {
+    synchronized public void handle(final World world, final boolean hasPos, final double posX, final double posY, final double posZ, final boolean hasRot, final double rotX, final double rotY, final boolean onGround) {
         // Handling logic
         final Location from = new Location(world, this.lastPosX, this.lastPosY, this.lastPosZ);
         final Location to = new Location(world, posX, posY, posZ);
+
         final MovementContainer movement = new MovementContainer(from, to, onGround);
         final BoundingBox boundingBox = new BoundingBox(posX, posY, posZ, posX, posY, posZ);
 
         playerData.setLastMovement(movement);
 
-        if (from.distanceSquared(to) == 0d) {   // Check if player has moved
-            return;
-        }
+        //if (from.distanceSquared(to) == 0d) {   // Check if player has moved
+         //   return;
+        //}
 
         // Make sure the player isn't flying and he isn't in a vehicle
         if (playerData.getPlayer().isInsideVehicle() || playerData.getPlayer().getAllowFlight()) {
             return;
         }
+
+        final Collection<Entity> tempEntities = playerData.getPlayer().getNearbyEntities(3.0d,3.0d,3.0d);
+
+        //for (final Entity entity : tempEntities) {
+           // final EntityType entityType = entity.getType();
+           // if (IS_VEHICLE.test(entityType)) {
+          //      return;
+         //   }
+        //}
+
+        this.nearbyEntities = tempEntities.toArray(new Entity[0]);
+        this.lastBoundingBox = boundingBox;
+        this.playerData.getBoundingBoxes().offerLast(boundingBox);
 
         handleCollisions(boundingBox, world);
 
@@ -168,6 +174,9 @@ public final class MovementManager {
     private static final Predicate<Material> IS_CLIMB = (m -> STAIRS.contains(m) || SLABS.contains(m));
     private static final Predicate<Material> IS_LADDER = (m -> m == Material.LADDER);
     private static final Predicate<Material> IS_STRANGE = (m -> m == Material.BREWING_STAND || m == Material.LILY_PAD);
+    private static final Predicate<EntityType> IS_VEHICLE = (t -> t == EntityType.BOAT || t == EntityType.CHEST_BOAT
+    || t == EntityType.MINECART_TNT || t == EntityType.MINECART_CHEST || t == EntityType.MINECART_FURNACE ||
+            t == EntityType.MINECART_HOPPER || t == EntityType.MINECART_MOB_SPAWNER || t == EntityType.MINECART_COMMAND);
 
     private synchronized void handleCollisions(@NotNull final BoundingBox boundingBox, @NotNull final World world) {
         boundingBox.expand(0.500d, 0.070d, 0.500d).shift(0.0d, -0.550d, 0.0d);
@@ -183,5 +192,121 @@ public final class MovementManager {
         this.touchingHalfBlock = (touchingHalfBlock);
         this.touchingClimbable = (touchingClimbable);
         this.touchingIllegalBlock = (touchingIllegalBlock);
+    }
+
+    public PlayerData getPlayerData() {
+        return playerData;
+    }
+
+    public double getLastPosX() {
+        return lastPosX;
+    }
+
+    public double getLastPosY() {
+        return lastPosY;
+    }
+
+    public double getLastPosZ() {
+        return lastPosZ;
+    }
+
+    public double getLastRotX() {
+        return lastRotX;
+    }
+
+    public double getLastRotY() {
+        return lastRotY;
+    }
+
+    public boolean isTouchingAir() {
+        return touchingAir;
+    }
+
+    public boolean isTouchingLiquid() {
+        return touchingLiquid;
+    }
+
+    public boolean isTouchingClimbable() {
+        return touchingClimbable;
+    }
+
+    public boolean isTouchingHalfBlock() {
+        return touchingHalfBlock;
+    }
+
+    public boolean isTouchingIllegalBlock() {
+        return touchingIllegalBlock;
+    }
+
+    public Entity[] getNearbyEntities() {
+        return nearbyEntities;
+    }
+
+    public BoundingBox getLastBoundingBox() {
+        return lastBoundingBox;
+    }
+
+    public static Collection<Material> getSTAIRS() {
+        return STAIRS;
+    }
+
+    public static Collection<Material> getSLABS() {
+        return SLABS;
+    }
+
+    public void setLastPosX(double lastPosX) {
+        this.lastPosX = lastPosX;
+    }
+
+    public void setLastPosY(double lastPosY) {
+        this.lastPosY = lastPosY;
+    }
+
+    public void setLastPosZ(double lastPosZ) {
+        this.lastPosZ = lastPosZ;
+    }
+
+    public void setLastRotX(double lastRotX) {
+        this.lastRotX = lastRotX;
+    }
+
+    public void setLastRotY(double lastRotY) {
+        this.lastRotY = lastRotY;
+    }
+
+    public void setTouchingAir(boolean touchingAir) {
+        this.touchingAir = touchingAir;
+    }
+
+    public void setTouchingLiquid(boolean touchingLiquid) {
+        this.touchingLiquid = touchingLiquid;
+    }
+
+    public void setTouchingClimbable(boolean touchingClimbable) {
+        this.touchingClimbable = touchingClimbable;
+    }
+
+    public void setTouchingHalfBlock(boolean touchingHalfBlock) {
+        this.touchingHalfBlock = touchingHalfBlock;
+    }
+
+    public void setTouchingIllegalBlock(boolean touchingIllegalBlock) {
+        this.touchingIllegalBlock = touchingIllegalBlock;
+    }
+
+    public void setNearbyEntities(Entity[] nearbyEntities) {
+        this.nearbyEntities = nearbyEntities;
+    }
+
+    public void setLastBoundingBox(BoundingBox lastBoundingBox) {
+        this.lastBoundingBox = lastBoundingBox;
+    }
+
+    public static void setSTAIRS(Collection<Material> STAIRS) {
+        MovementManager.STAIRS = STAIRS;
+    }
+
+    public static void setSLABS(Collection<Material> SLABS) {
+        MovementManager.SLABS = SLABS;
     }
 }

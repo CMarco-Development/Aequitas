@@ -1,15 +1,11 @@
 package top.cmarco.aequitas.analysis;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 /**
  * Manager class for analyzing incoming and outgoing packets.
  */
-@Getter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public final class AnalysisManager {
+
+    public AnalysisManager() {}
 
     /**
      * Analyzer for incoming packets.
@@ -22,4 +18,12 @@ public final class AnalysisManager {
      * Server -> Client.
      */
     private final OutgoingPacketAnalyser outgoingPacketAnalyser = new OutgoingPacketAnalyser();
+
+    public IncomingPacketAnalyser getIncomingPacketAnalyser() {
+        return incomingPacketAnalyser;
+    }
+
+    public OutgoingPacketAnalyser getOutgoingPacketAnalyser() {
+        return outgoingPacketAnalyser;
+    }
 }

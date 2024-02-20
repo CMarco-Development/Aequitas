@@ -1,25 +1,74 @@
 package top.cmarco.aequitas;
 
-import lombok.Getter;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import top.cmarco.aequitas.analysis.AnalysisManager;
+import top.cmarco.aequitas.commands.AequitasCommand;
+import top.cmarco.aequitas.config.AequitasConfig;
 import top.cmarco.aequitas.data.PlayerDataManager;
 import top.cmarco.aequitas.listener.GlobalListener;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Main class of this software.
  */
-@Getter
 public final class Aequitas extends JavaPlugin {
 
-    private final PlayerDataManager playerDataManager = new PlayerDataManager();
+    @Override
+    public void onEnable() { // Plugin startup logic
+        this.setupConfig();
+        this.registerDataManager();
+        this.registerListeners();
+        this.registerCommands();
+    }
+
+    @Override
+    public void onDisable() { // Plugin shutdown logic
+    }
+
+
+    private PlayerDataManager playerDataManager = null;
     /* ------------------------------------------ */
-    private final GlobalListener globalListener = new GlobalListener(this);
+    private GlobalListener globalListener = null;
     private boolean isRegisteredListeners = false;
     /* ------------------------------------------ */
     private final AnalysisManager analysisManager = new AnalysisManager();
     /* ------------------------------------------ */
+    private final Executor executorAlert = Executors.newSingleThreadExecutor();
+    private final Executor executorPacket = Executors.newSingleThreadExecutor();
+    /* ----------------------------------------- */
+    private AequitasCommand aequitasCommand = null;
+    private AequitasConfig aequitasConfig = null;
+
+    private void setupConfig() {
+        if (aequitasConfig != null) {
+            return;
+        }
+
+        this.aequitasConfig = new AequitasConfig(this);
+    }
+
+    private void registerCommands() {
+        this.aequitasCommand = new AequitasCommand(this);
+
+        getCommand("aequitas").setExecutor(this.aequitasCommand);
+    }
+
+    public void runTaskSync(@NotNull final Runnable runnable) {
+        super.getServer().getScheduler().runTask(this, runnable);
+    }
+
+    private void registerDataManager() {
+        if (playerDataManager != null) {
+            getLogger().warning("WARNING! Tried to register data manager twice.");
+            return;
+        }
+
+        this.playerDataManager = new PlayerDataManager(this);
+    }
 
     /**
      * Register all the listeners used by this server.
@@ -33,17 +82,39 @@ public final class Aequitas extends JavaPlugin {
             return;
         }
 
+        this.globalListener = new GlobalListener(this);
         pluginManager.registerEvents(this.globalListener, this);
 
         this.isRegisteredListeners = true; // marking the listeners as registered.
     }
 
-    @Override
-    public void onEnable() { // Plugin startup logic
-        this.registerListeners();
+    /* -------------------------------------------------------------------------------------- */
+
+    public PlayerDataManager getPlayerDataManager() {
+        return playerDataManager;
     }
 
-    @Override
-    public void onDisable() { // Plugin shutdown logic
+    public GlobalListener getGlobalListener() {
+        return globalListener;
+    }
+
+    public boolean isRegisteredListeners() {
+        return isRegisteredListeners;
+    }
+
+    public AnalysisManager getAnalysisManager() {
+        return analysisManager;
+    }
+
+    public Executor getExecutorAlert() {
+        return executorAlert;
+    }
+
+    public Executor getExecutorPacket() {
+        return executorPacket;
+    }
+
+    public AequitasConfig getAequitasConfig() {
+        return aequitasConfig;
     }
 }

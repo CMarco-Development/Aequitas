@@ -1,24 +1,24 @@
 package top.cmarco.aequitas.checks;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import top.cmarco.aequitas.checks.implementations.SpeedA;
+import org.jetbrains.annotations.NotNull;
+import top.cmarco.aequitas.checks.implementations.fly.FlyA;
+import top.cmarco.aequitas.checks.implementations.jesus.JesusA;
+import top.cmarco.aequitas.checks.implementations.jesus.JesusB;
 import top.cmarco.aequitas.data.PlayerData;
 
 import java.util.HashSet;
+import java.util.Objects;
 
 
 /**
  * The CheckManager class is responsible for storing and managing instances of anti-cheat checks.
  * It maintains a set of Check objects and provides methods for check registration.
  */
-@Getter
 public final class CheckManager {
 
     /**
      * The player data associated with this CheckManager.
      */
-    @Getter(AccessLevel.NONE)
     private final PlayerData playerData;
 
     /**
@@ -31,8 +31,8 @@ public final class CheckManager {
      *
      * @param playerData The player data associated with this CheckManager.
      */
-    public CheckManager(PlayerData playerData) {
-        this.playerData = playerData;
+    public CheckManager(@NotNull final PlayerData playerData) {
+        this.playerData = Objects.requireNonNull(playerData);
         this.registerAllChecks();
     }
 
@@ -41,6 +41,12 @@ public final class CheckManager {
      */
     private void registerAllChecks() {
         // Example: Adding all checks individually.
-        this.checks.add(new SpeedA(this.playerData));
+        this.checks.add(new JesusA(this.playerData));
+        this.checks.add(new JesusB(this.playerData));
+        this.checks.add(new FlyA(this.playerData));
+    }
+
+    public HashSet<Check<?>> getChecks() {
+        return checks;
     }
 }

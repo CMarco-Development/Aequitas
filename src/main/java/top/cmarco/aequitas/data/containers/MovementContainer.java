@@ -1,16 +1,18 @@
 package top.cmarco.aequitas.data.containers;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 
 /**
  * The MovementContainer class serves as a container for movement-related information
  * from one location to another, along with an indication of whether the entity is on the ground.
  */
-@RequiredArgsConstructor
-@Getter
 public final class MovementContainer {
+
+    public MovementContainer(final Location from, final Location to, final boolean isOnGround) {
+        this.from = from;
+        this.to = to;
+        this.isOnGround = isOnGround;
+    }
 
     /**
      * The starting location of the movement.
@@ -27,4 +29,15 @@ public final class MovementContainer {
      */
     private final boolean isOnGround;
 
+    public Location getFrom() {
+        return from;
+    }
+
+    public Location getTo() {
+        return to;
+    }
+
+    public boolean isOnGround() {
+        return isOnGround;
+    }
 }
