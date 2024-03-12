@@ -3,7 +3,7 @@ version: '${project.version}'
 main: top.cmarco.aequitas.Aequitas
 api-version: '1.20'
 authors: [CMarcoo]
-description: Aequitas Anticheat for SpigotMC Servers
+description: 'Aequitas Anticheat for SpigotMC Servers'
 commands:
   aequitas:
     description: 'Main command of aequitas anti-cheat software.'
